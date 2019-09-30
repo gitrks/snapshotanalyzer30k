@@ -6,6 +6,11 @@ session = boto3.Session(profile_name='shotty')
 ec2 = session.resource('ec2')
 
 
+def has_pending_snapshot(volume):
+	snapshots = list(volume.snapshots.all())
+	return snapshot and snapshots[0].state == 'pending'
+
+
 def filter_instances(project):
 	"Filter instances by project"
 	instances =[]
@@ -48,7 +53,8 @@ def snapshots():
 		"""Command for snapshots"""
 @snapshots.command('list')
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
-def list_snapshots(project):
+@click.option('--all','list_all',default=False, is_flag=True,help='List all snapshots for each volume, not just the most recent')
+def list_snapshots(project,list_all):
 	"List snapshots"
 	instances = filter_instances(project)
 
@@ -65,6 +71,8 @@ def list_snapshots(project):
 
 
 					)) )
+				if s.state == 'completed' and not list_all:
+					break
 	return
 
 
@@ -139,6 +147,8 @@ def create_snapshots(project):
 		i.stop()
 		i.wait_until_stopped()
 		for v in i.volumes.all():
+			if has_pending_snapshot(v):
+				print(f"skipping..{v.id}")
 			print(f"Creating snapshot of {v.id}")
 			v.create_snapshot(Description='created by snapshotAnalyzer30K')
 

@@ -13,4 +13,7 @@ Shotty uses the configuration file created by
 
 ## Running
 
-'pipenv run "Python shotty.shotty.py"'
+'pipenv run "Python shotty.shotty.py <command> <--project=Valyrie>"'
+
+*command* is list, start, stop
+*project* is optional

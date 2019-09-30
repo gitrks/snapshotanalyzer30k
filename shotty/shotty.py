@@ -17,7 +17,57 @@ def filter_instances(project):
 	return instances
 
 @click.group()
+def cli():
+	""" Shotty manages instances"""
 
+
+
+@cli.group('Volumes')
+def Volumes():
+		"""Command for Volumes"""
+@Volumes.command('list')
+@click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
+def list_Volumes(project):
+	"List Volumes"
+	instances = filter_instances(project)
+
+	for i in instances:
+		for v in i.volumes.all():
+			print("," .join((
+				v.id,
+				i.id,
+				v.state,
+				str(v.size) + "GiB",
+				v.encrypted and "encrypted" or "Not encrypted"
+				)))
+	return
+
+@cli.group('snapshots')
+def snapshots():
+		"""Command for snapshots"""
+@snapshots.command('list')
+@click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
+def list_snapshots(project):
+	"List snapshots"
+	instances = filter_instances(project)
+
+	for i in instances:
+		for v in i.volumes.all():
+			for s in v.snapshots.all():
+				print(",".join((
+					s.id,
+					v.id,
+					i.id,
+					s.state,
+					s.progress,
+					s.start_time.strftime("%c")
+
+
+					)) )
+	return
+
+
+@cli.group('instances')
 def instances():
 	""" Command for instances """
 @instances.command('list')
@@ -67,8 +117,22 @@ def start_instances(project):
 		i.start()
 	return
 
+@instances.command('snapshot', help="Create snapshot for Volumes")
+@click.option('--project',default=None,help='Only instances for project(tag project)')
+
+def create_snapshots(project):
+	""" Create snapshots for EC2 instances"""
+
+	instances= filter_instances(project)
+
+	for i in instances:
+		for v in i.volumes.all()
+		print(f"Creating snapshot of {v.id}")
+		v.create_snapshots(Description='created by snapshotAnalyzer30K')
+	return
+
 
 
 if __name__ == '__main__':
-	instances()
+	cli()
 	
